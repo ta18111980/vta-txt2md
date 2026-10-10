@@ -1,0 +1,6 @@
+{
+  "name": "TXT sang Markdown (.md) Converter",
+  "description": "Ứng dụng chuyển đổi file văn bản .txt sang định dạng Markdown .md chuyên nghiệp, tự động nhận diện tiêu đề, danh sách, giữ nguyên tiếng Việt và dòng trống.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

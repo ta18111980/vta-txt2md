@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TXT sang Markdown (.md) Converter</title>
+  <meta name="description" content="Ứng dụng chuyển đổi file văn bản .txt sang định dạng Markdown .md chuyên nghiệp, tự động nhận diện tiêu đề, danh sách, giữ nguyên tiếng Việt và dòng trống." />
+  <meta property="og:title" content="TXT sang Markdown (.md) Converter" />
+  <meta property="og:description" content="Chuyển đổi file TXT sang Markdown (.md) nhanh chóng, chính xác, không cần cài đặt hoặc backend." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    /* Reset & biến giao diện theo yêu cầu */
+    :root {
+      --primary-blue: #2563eb;
+      --primary-blue-hover: #1d4ed8;
+      --primary-blue-light: #eff6ff;
+      --primary-orange: #ea580c;
+      --primary-orange-hover: #c2410c;
+      --primary-red: #dc2626;
+      --primary-red-hover: #b91c1c;
+      --primary-green: #10b981;
+      --primary-green-dark: #059669;
+      --primary-teal: #0d9488;
+      --primary-teal-hover: #0f766e;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--slate-50);
+      color: var(--slate-900);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* Header với gradient xanh lam sang xanh lá */
+    header {
+      background: linear-gradient(135deg, #1e40af 0%, #2563eb 45%, #059669 100%);
+      color: #ffffff;
+      padding: 24px 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 26px;
+      height: 26px;
+      color: #ffffff;
+    }
+
+    .brand-text h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .brand-text p {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-top: 2px;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Khu vực Kéo thả file */
+    .dropzone-container {
+      background: #ffffff;
+      border: 2px dashed var(--slate-300);
+      border-radius: var(--radius-lg);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dropzone-container:hover,
+    .dropzone-container.dragover {
+      border-color: var(--primary-blue);
+      background-color: var(--primary-blue-light);
+      transform: translateY(-1px);
+    }
+
+    .dropzone-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .dropzone-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: var(--primary-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropzone-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--slate-800);
+    }
+
+    .dropzone-desc {
+      font-size: 0.875rem;
+      color: var(--slate-600);
+    }
+
+    .dropzone-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 4px;
+      pointer-events: auto;
+    }
+
+    .btn-select-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      color: var(--primary-blue);
+      border: 1.5px solid var(--primary-blue);
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-select-file:hover {
+      background: var(--primary-blue);
+      color: #ffffff;
+    }
+
+    .btn-sample {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-sample:hover {
+      background: var(--slate-200);
+      color: var(--slate-900);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .current-file-badge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.875rem;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+    }
+
+    /* Thanh điều khiển nút bấm */
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Định dạng nút theo yêu cầu màu sắc */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+    }
+
+    /* Nút chính: Xanh lam */
+    .btn-primary {
+      background-color: var(--primary-blue);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-blue-hover);
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Nút sao chép */
+    .btn-copy {
+      background-color: var(--primary-teal);
+      color: #ffffff;
+    }
+    .btn-copy:hover {
+      background-color: var(--primary-teal-hover);
+      box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+    }
+
+    /* Nút tải file: Cam */
+    .btn-orange {
+      background-color: var(--primary-orange);
+      color: #ffffff;
+    }
+    .btn-orange:hover {
+      background-color: var(--primary-orange-hover);
+      box-shadow: 0 4px 10px rgba(234, 88, 12, 0.25);
+    }
+
+    /* Nút xóa: Đỏ */
+    .btn-red {
+      background-color: var(--primary-red);
+      color: #ffffff;
+    }
+    .btn-red:hover {
+      background-color: var(--primary-red-hover);
+      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Cài đặt nhận diện (Tùy chọn) */
+    .options-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.8125rem;
+      color: var(--slate-700);
+      background: var(--slate-100);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+    }
+
+    .option-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .option-item input[type="checkbox"] {
+      accent-color: var(--primary-blue);
+      cursor: pointer;
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Lưới 2 cột song song */
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      min-height: 540px;
+    }
+
+    @media (max-width: 900px) {
+      .editor-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .panel-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--slate-800);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary-blue);
+    }
+
+    .panel-stats {
+      font-size: 0.75rem;
+      color: var(--slate-600);
+      display: flex;
+      gap: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tab-group {
+      display: flex;
+      gap: 4px;
+      background: var(--slate-100);
+      padding: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .tab-btn {
+      font-size: 0.78125rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border: none;
+      background: transparent;
+      color: var(--slate-600);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary-blue);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    textarea.editor-textarea {
+      width: 100%;
+      height: 100%;
+      min-height: 460px;
+      padding: 16px;
+      border: none;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--slate-900);
+      background: #ffffff;
+      outline: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    textarea.editor-textarea:focus {
+      background-color: #fafbfc;
+    }
+
+    /* Khu vực Xem trước Markdown đã render */
+    .markdown-preview {
+      width: 100%;
+      height: 100%;
+      min-height: 460px;
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: var(--slate-800);
+      background: #ffffff;
+      display: none;
+    }
+
+    .markdown-preview.active {
+      display: block;
+    }
+
+    /* Kiểu dáng Markdown đã render */
+    .markdown-preview h1 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      border-bottom: 2px solid var(--slate-200);
+      padding-bottom: 8px;
+      margin: 16px 0 12px;
+    }
+
+    .markdown-preview h1:first-child {
+      margin-top: 0;
+    }
+
+    .markdown-preview h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      border-bottom: 1px solid var(--slate-200);
+      padding-bottom: 6px;
+      margin: 16px 0 10px;
+    }
+
+    .markdown-preview h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--slate-900);
+      margin: 14px 0 8px;
+    }
+
+    .markdown-preview h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--slate-800);
+      margin: 12px 0 6px;
+    }
+
+    .markdown-preview p {
+      margin-bottom: 12px;
+    }
+
+    .markdown-preview ul,
+    .markdown-preview ol {
+      margin-bottom: 12px;
+      padding-left: 24px;
+    }
+
+    .markdown-preview li {
+      margin-bottom: 4px;
+    }
+
+    .markdown-preview blockquote {
+      border-left: 4px solid var(--primary-blue);
+      padding: 8px 16px;
+      background: var(--slate-50);
+      color: var(--slate-700);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 12px 0;
+    }
+
+    .markdown-preview hr {
+      border: none;
+      height: 1px;
+      background: var(--slate-200);
+      margin: 20px 0;
+    }
+
+    .markdown-preview pre {
+      background: var(--slate-900);
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      font-family: Consolas, monospace;
+      font-size: 0.85rem;
+      margin: 12px 0;
+    }
+
+    .markdown-preview code {
+      background: var(--slate-100);
+      color: #e11d48;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.875em;
+      font-family: Consolas, monospace;
+    }
+
+    .markdown-preview pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    .markdown-preview strong {
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    /* Thông báo trạng thái Toast */
+    #statusToast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--slate-900);
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    #statusToast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #statusToast.success {
+      background: #065f46;
+      border: 1px solid #059669;
+    }
+
+    #statusToast.info {
+      background: #1e3a8a;
+      border: 1px solid #2563eb;
+    }
+
+    #statusToast.orange {
+      background: #7c2d12;
+      border: 1px solid #ea580c;
+    }
+
+    #statusToast.error {
+      background: #7f1d1d;
+      border: 1px solid #dc2626;
+    }
+
+    /* Footer nhẹ nhàng */
+    footer {
+      border-top: 1px solid var(--slate-200);
+      padding: 18px 20px;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--slate-600);
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header với gradient hiện đại: Xanh lam sang Xanh lá -->
+  <header>
+    <div class="header-container">
+      <div class="brand-wrap">
+        <div class="brand-icon" aria-hidden="true">
+          <!-- Biểu tượng văn bản sang Markdown -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M9 15l2 2 4-4"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Chuyển đổi TXT sang Markdown (.md)</h1>
+          <p>Tự động nhận diện tiêu đề, danh sách, giữ nguyên tiếng Việt có dấu và dòng trống</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <div class="header-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Chạy 100% trên trình duyệt
+        </div>
+        <div class="header-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Không gửi dữ liệu ra ngoài
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Khu vực Kéo thả file & Chọn 1 file txt -->
+    <section class="dropzone-container" id="dropzone" aria-label="Khu vực kéo thả file txt">
+      <div class="dropzone-inner">
+        <div class="dropzone-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <p class="dropzone-title">Kéo &amp; thả file .txt vào đây hoặc bấm nút để chọn file</p>
+        <p class="dropzone-desc">Hỗ trợ file văn bản .txt (Mã hóa UTF-8 đầy đủ dấu tiếng Việt)</p>
+        <div class="dropzone-actions">
+          <button type="button" class="btn-select-file" id="btnBrowseFile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Chọn file từ máy tính
+          </button>
+          <button type="button" class="btn-sample" id="btnLoadSample" title="Nạp văn bản tiếng Việt mẫu để kiểm tra ngay">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            Xem mẫu thử tiếng Việt
+          </button>
+        </div>
+        <div class="current-file-badge" id="fileInfoBadge">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+          <span id="fileNameLabel">Chưa chọn file</span>
+        </div>
+      </div>
+      <!-- File input đơn lẻ (1 file) -->
+      <input type="file" id="fileInput" accept=".txt,.text,.log,.md,.csv" />
+    </section>
+
+    <!-- Tùy chọn thông minh -->
+    <div class="options-bar">
+      <label class="option-item" title="Tự động biến các dòng VIẾT HOA hoặc Chương 1, I., 1. thành đề mục Markdown">
+        <input type="checkbox" id="optHeadings" checked />
+        <span>Tự nhận diện Tiêu đề (#, ##, ###)</span>
+      </label>
+      <label class="option-item" title="Nhận diện dấu gạch ngang, chấm tròn, hoặc số thứ tự thành danh sách Markdown">
+        <input type="checkbox" id="optLists" checked />
+        <span>Chuẩn hóa Danh sách (gạch đầu dòng &amp; số thứ tự)</span>
+      </label>
+      <label class="option-item" title="Biến dòng 'Lưu ý:', 'Ghi chú:' thành trích dẫn blockquote">
+        <input type="checkbox" id="optQuotes" checked />
+        <span>Nhận diện Ghi chú / Lưu ý (&gt;)</span>
+      </label>
+      <label class="option-item" title="In đậm các dòng dạng Họ tên: Nguyễn Văn A">
+        <input type="checkbox" id="optKeyValue" checked />
+        <span>In đậm nhãn khóa (Từ khóa: Giá trị)</span>
+      </label>
+      <label class="option-item" title="Giữ nguyên các dòng ngắt đoạn trống quan trọng">
+        <input type="checkbox" id="optPreserveEmpty" checked />
+        <span>Giữ dòng trống ngắt đoạn</span>
+      </label>
+    </div>
+
+    <!-- Thanh nút hành động theo màu chỉ định -->
+    <section class="action-bar" aria-label="Thao tác điều khiển">
+      <div class="action-group">
+        <!-- Nút chính: Xanh lam -->
+        <button type="button" class="btn btn-primary" id="btnConvert" title="Chuyển đổi nội dung gốc sang Markdown">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Chuyển sang Markdown
+        </button>
+
+        <!-- Nút sao chép -->
+        <button type="button" class="btn btn-copy" id="btnCopy" title="Sao chép toàn bộ văn bản Markdown vào bộ nhớ tạm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Sao chép Markdown
+        </button>
+
+        <!-- Nút tải file: Màu cam -->
+        <button type="button" class="btn btn-orange" id="btnDownload" title="Tải file định dạng .md về máy tính">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Tải file .md
+        </button>
+      </div>
+
+      <div class="action-group">
+        <!-- Nút xóa nội dung: Màu đỏ -->
+        <button type="button" class="btn btn-red" id="btnClear" title="Xóa toàn bộ nội dung hai bên">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+          Xóa nội dung
+        </button>
+      </div>
+    </section>
+
+    <!-- Khu vực 2 cột hiển thị -->
+    <div class="editor-grid">
+      <!-- Cột Trái: Nội dung gốc .txt -->
+      <section class="panel-card" aria-label="Nội dung gốc .txt">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Nội dung gốc (.txt)
+          </div>
+          <div class="panel-stats">
+            <span id="srcCharCount">0 ký tự</span>
+            <span>·</span>
+            <span id="srcWordCount">0 từ</span>
+            <span>·</span>
+            <span id="srcLineCount">0 dòng</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea
+            id="rawTextInput"
+            class="editor-textarea"
+            placeholder="Dán nội dung văn bản tiếng Việt hoặc kéo thả 1 file .txt vào đây...&#10;&#10;Ví dụ:&#10;BÁO CÁO KẾT QUẢ DỰ ÁN&#10;1. Giới thiệu tổng quan&#10;- Mục tiêu 1&#10;- Mục tiêu 2&#10;&#10;Lưu ý: Giữ nguyên các dòng trống quan trọng!"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- Cột Phải: Bản Markdown .md (kèm tab Xem trước) -->
+      <section class="panel-card" aria-label="Bản Markdown .md">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 7 4 4 20 4 20 7"></polyline>
+              <line x1="9" y1="20" x2="15" y2="20"></line>
+              <line x1="12" y1="4" x2="12" y2="20"></line>
+            </svg>
+            Bản Markdown (.md)
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="tab-group" role="tablist">
+              <button type="button" class="tab-btn active" id="tabCode" role="tab">Mã .md</button>
+              <button type="button" class="tab-btn" id="tabPreview" role="tab">Xem trước</button>
+            </div>
+            <div class="panel-stats">
+              <span id="mdCharCount">0 ký tự</span>
+              <span>·</span>
+              <span id="mdLineCount">0 dòng</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <textarea
+            id="markdownOutput"
+            class="editor-textarea"
+            placeholder="Kết quả Markdown (.md) sẽ xuất hiện tại đây sau khi chuyển đổi..."
+            spellcheck="false"
+          ></textarea>
+          <div id="markdownPreview" class="markdown-preview" role="region" aria-label="Xem trước Markdown">
+            <p style="color: var(--slate-600); font-style: italic;">Chưa có nội dung để hiển thị xem trước.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Thông báo trạng thái Toast -->
+  <div id="statusToast" role="status" aria-live="polite">
+    <span id="toastIcon"></span>
+    <span id="toastMessage">Thông báo</span>
+  </div>
+
+  <footer>
+    <p>© Ứng dụng Chuyển đổi TXT sang Markdown (.md) · Hoạt động ngoại tuyến an toàn trên máy tính Windows, macOS &amp; Linux</p>
+  </footer>
+
+  <!-- JavaScript xử lý toàn bộ logic chuyển đổi -->
+  <script>
+    (function () {
+      "use strict";
+
+      // Lấy các phần tử DOM
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("fileInput");
+      const btnBrowseFile = document.getElementById("btnBrowseFile");
+      const btnLoadSample = document.getElementById("btnLoadSample");
+      const fileInfoBadge = document.getElementById("fileInfoBadge");
+      const fileNameLabel = document.getElementById("fileNameLabel");
+
+      const rawTextInput = document.getElementById("rawTextInput");
+      const markdownOutput = document.getElementById("markdownOutput");
+      const markdownPreview = document.getElementById("markdownPreview");
+
+      const btnConvert = document.getElementById("btnConvert");
+      const btnCopy = document.getElementById("btnCopy");
+      const btnDownload = document.getElementById("btnDownload");
+      const btnClear = document.getElementById("btnClear");
+
+      const tabCode = document.getElementById("tabCode");
+      const tabPreview = document.getElementById("tabPreview");
+
+      const optHeadings = document.getElementById("optHeadings");
+      const optLists = document.getElementById("optLists");
+      const optQuotes = document.getElementById("optQuotes");
+      const optKeyValue = document.getElementById("optKeyValue");
+      const optPreserveEmpty = document.getElementById("optPreserveEmpty");
+
+      const srcCharCount = document.getElementById("srcCharCount");
+      const srcWordCount = document.getElementById("srcWordCount");
+      const srcLineCount = document.getElementById("srcLineCount");
+      const mdCharCount = document.getElementById("mdCharCount");
+      const mdLineCount = document.getElementById("mdLineCount");
+
+      const statusToast = document.getElementById("statusToast");
+      const toastMessage = document.getElementById("toastMessage");
+      const toastIcon = document.getElementById("toastIcon");
+
+      let currentFileName = "van-ban.txt";
+      let toastTimeout = null;
+
+      // Regex tiếng Việt để nhận diện ký tự hoa có dấu
+      const viUpper = "A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴĐ";
+
+      // Hiển thị thông báo trạng thái Toast
+      function showToast(message, type = "success") {
+        clearTimeout(toastTimeout);
+        toastMessage.textContent = message;
+        statusToast.className = `show ${type}`;
+
+        if (type === "success") {
+          toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        } else if (type === "orange") {
+          toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+        } else if (type === "info") {
+          toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        } else {
+          toastIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+        }
+
+        toastTimeout = setTimeout(() => {
+          statusToast.className = "";
+        }, 3200);
+      }
+
+      // Cập nhật thống kê ký tự, từ, dòng
+      function updateStats() {
+        const rawText = rawTextInput.value;
+        const mdText = markdownOutput.value;
+
+        const rawChars = rawText.length;
+        const rawWords = rawText.trim() ? rawText.trim().split(/\s+/).length : 0;
+        const rawLines = rawText ? rawText.split("\n").length : 0;
+        srcCharCount.textContent = `${rawChars.toLocaleString("vi-VN")} ký tự`;
+        srcWordCount.textContent = `${rawWords.toLocaleString("vi-VN")} từ`;
+        srcLineCount.textContent = `${rawLines.toLocaleString("vi-VN")} dòng`;
+
+        const mdChars = mdText.length;
+        const mdLines = mdText ? mdText.split("\n").length : 0;
+        mdCharCount.textContent = `${mdChars.toLocaleString("vi-VN")} ký tự`;
+        mdLineCount.textContent = `${mdLines.toLocaleString("vi-VN")} dòng`;
+      }
+
+      // Xử lý đọc file từ máy tính
+      function handleFile(file) {
+        if (!file) return;
+        currentFileName = file.name;
+        fileNameLabel.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        fileInfoBadge.style.display = "inline-flex";
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          let content = e.target.result;
+          // Loại bỏ UTF-8 BOM nếu có
+          if (content.charCodeAt(0) === 0xFEFF) {
+            content = content.slice(1);
+          }
+          rawTextInput.value = content;
+          convertTxtToMarkdown();
+          showToast(`Đã tải file "${file.name}" thành công!`, "success");
+        };
+        reader.onerror = function () {
+          showToast("Có lỗi xảy ra khi đọc file!", "error");
+        };
+
+        // Đọc UTF-8 giữ nguyên toàn bộ dấu tiếng Việt
+        reader.readAsText(file, "UTF-8");
+      }
+
+      // Kéo và thả file (Drag & Drop)
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+
+      dropzone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+      });
+
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      // Mở hộp thoại chọn file
+      btnBrowseFile.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+          fileInput.value = "";
+        }
+      });
+
+      // Nạp dữ liệu tiếng Việt mẫu
+      btnLoadSample.addEventListener("click", () => {
+        const sampleText = `CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập - Tự do - Hạnh phúc
+----------------------------------------
+
+KẾ HOẠCH TRIỂN KHAI DỰ ÁN CÔNG NGHỆ 2026
+
+Tác giả: Ban Kỹ thuật & Phát triển Phần mềm
+Ngày ban hành: 10/10/2026
+Trạng thái: Đã phê duyệt chính thức
+
+I. MỤC TIÊU VÀ PHẠM VI DỰ ÁN
+1. Mục tiêu trọng tâm:
+Nâng cấp toàn bộ hệ thống số hóa văn bản của cơ quan, đảm bảo xử lý tiếng Việt có dấu chính xác 100%, không bị lỗi font hay mất dữ liệu.
+
+2. Các yêu cầu kỹ thuật cốt lõi:
+- Xử lý file văn bản thuần .txt sang Markdown chuẩn .md.
+- Nhận diện danh sách gạch đầu dòng và số thứ tự.
+- Tương thích tốt với hệ điều hành Windows và các trình duyệt hiện đại.
+- Tốc độ chuyển đổi siêu tốc, không cần máy chủ (chạy trực tiếp tại máy người dùng).
+
+II. PHÂN CÔNG NHIỆM VỤ CHI TIẾT
+1.1 Giai đoạn khởi động (Tháng 1 - Tháng 3):
+• Khảo sát nhu cầu thực tế của các phòng ban
+• Thiết kế giao diện thân thiện với tông màu xanh lam, cam và đỏ
+• Kiểm thử độ chính xác của bộ lọc tiếng Việt
+
+1.2 Giai đoạn triển khai (Tháng 4 - Tháng 6):
+1) Cài đặt hệ thống trên toàn bộ máy tính nội bộ
+2) Đào tạo hướng dẫn sử dụng cho nhân viên
+3) Tiếp nhận phản hồi và tối ưu hóa trải nghiệm
+
+Lưu ý: Tất cả các file tải về phải được mã hóa theo chuẩn UTF-8 để bảo toàn toàn bộ dấu thanh tiếng Việt như: à, á, ả, ã, ạ, ă, ắ, â, đ, ê, ô, ơ, ư.
+
+Ghi chú: Bản tài liệu này được lưu trữ an toàn trong định dạng Markdown để phục vụ tra cứu lâu dài.`;
+
+        currentFileName = "ke-hoach-trien-khai-mau.txt";
+        fileNameLabel.textContent = "ke-hoach-trien-khai-mau.txt (Mẫu tiếng Việt)";
+        fileInfoBadge.style.display = "inline-flex";
+        rawTextInput.value = sampleText;
+        convertTxtToMarkdown();
+        showToast("Đã nạp văn bản tiếng Việt mẫu thành công!", "info");
+      });
+
+      // THUẬT TOÁN CHUYỂN ĐỔI: TỰ ĐỘNG NHẬN DIỆN VÀ CHUYỂN .TXT SANG MARKDOWN
+      function convertTxtToMarkdown() {
+        const text = rawTextInput.value;
+        if (!text.trim()) {
+          markdownOutput.value = "";
+          updateMarkdownPreview("");
+          updateStats();
+          return;
+        }
+
+        const isHeadingsEnabled = optHeadings.checked;
+        const isListsEnabled = optLists.checked;
+        const isQuotesEnabled = optQuotes.checked;
+        const isKeyValueEnabled = optKeyValue.checked;
+        const isPreserveEmptyEnabled = optPreserveEmpty.checked;
+
+        // Chuẩn hóa ngắt dòng Windows (\r\n) sang (\n)
+        const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+        const resultLines = [];
+        const total = lines.length;
+
+        for (let i = 0; i < total; i++) {
+          const rawLine = lines[i];
+          const trimmed = rawLine.trim();
+
+          // Xử lý dòng trống (giữ nguyên không làm mất dòng trống ngắt đoạn)
+          if (trimmed === "") {
+            if (isPreserveEmptyEnabled) {
+              if (resultLines.length > 0 && resultLines[resultLines.length - 1] !== "") {
+                resultLines.push("");
+              }
+            }
+            continue;
+          }
+
+          // Kiểm tra dòng gạch chân dạng:
+          // Tiêu đề
+          // ====== hoặc ------
+          if (i + 1 < total && isHeadingsEnabled) {
+            const nextTrim = lines[i + 1].trim();
+            if (/^={3,}$/.test(nextTrim)) {
+              resultLines.push(`# ${trimmed}`);
+              i++;
+              continue;
+            } else if (/^-{3,}$/.test(nextTrim) && !/^-{1,2}\s/.test(trimmed)) {
+              resultLines.push(`## ${trimmed}`);
+              i++;
+              continue;
+            }
+          }
+
+          // 1. Nhận diện đường kẻ ngang ngăn cách (--- hoặc === hoặc ___ từ 3 ký tự trở lên)
+          if (/^[-=_*]{3,}$/.test(trimmed)) {
+            resultLines.push("---");
+            continue;
+          }
+
+          // 2. Nhận diện tiêu đề đã có sẵn ký tự #
+          if (/^#{1,6}\s+.+$/.test(trimmed)) {
+            resultLines.push(trimmed);
+            continue;
+          }
+
+          // 3. Nhận diện Tiêu đề tự động (Headings)
+          let handledHeading = false;
+          if (isHeadingsEnabled) {
+            // Dạng Chương / Phần / Bài / Kế hoạch
+            const chapterMatch = trimmed.match(/^(CHƯƠNG|PHẦN|BÀI|KẾ HOẠCH|BÁO CÁO|QUYẾT ĐỊNH|THÔNG BÁO|ĐIỀU|HỢP ĐỒNG)\s+([0-9IVXLCDM]+|[A-Z])[\s:.-]*(.*)$/i);
+            if (chapterMatch) {
+              const titleRest = chapterMatch[3] ? ` ${chapterMatch[3].trim()}` : "";
+              resultLines.push(`## ${chapterMatch[1]} ${chapterMatch[2]}:${titleRest}`);
+              handledHeading = true;
+            }
+
+            // Dạng La Mã: I. II. III. IV. V. ...
+            if (!handledHeading) {
+              const romanMatch = trimmed.match(/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)\.\s+(.+)$/);
+              if (romanMatch) {
+                resultLines.push(`## ${romanMatch[1]}. ${romanMatch[2]}`);
+                handledHeading = true;
+              }
+            }
+
+            // Dạng phân cấp số: 1.1 hoặc 1.1.1
+            if (!handledHeading) {
+              const subNumMatch = trimmed.match(/^(\d+\.\d+\.\d+)\.?\s+(.+)$/);
+              if (subNumMatch) {
+                resultLines.push(`#### ${subNumMatch[1]} ${subNumMatch[2]}`);
+                handledHeading = true;
+              } else {
+                const numMatch2 = trimmed.match(/^(\d+\.\d+)\.?\s+(.+)$/);
+                if (numMatch2) {
+                  resultLines.push(`### ${numMatch2[1]} ${numMatch2[2]}`);
+                  handledHeading = true;
+                }
+              }
+            }
+
+            // Dạng toàn chữ HOA (tiêu đề bài viết / tài liệu)
+            if (!handledHeading) {
+              const allCapsRegex = new RegExp(`^[${viUpper}0-9\\s,.:;!?'"\\-\\(\\)]{4,90}$`);
+              const hasLetterRegex = new RegExp(`[${viUpper}]`);
+              if (allCapsRegex.test(trimmed) && hasLetterRegex.test(trimmed) && !trimmed.endsWith(".")) {
+                if (trimmed.length <= 45 && resultLines.length <= 5) {
+                  resultLines.push(`# ${trimmed}`);
+                  handledHeading = true;
+                } else if (trimmed.length <= 75) {
+                  resultLines.push(`## ${trimmed}`);
+                  handledHeading = true;
+                }
+              }
+            }
+          }
+
+          if (handledHeading) continue;
+
+          // 4. Nhận diện danh sách gạch đầu dòng (Unordered Lists)
+          // Hỗ trợ: •, -, *, +, –, —, ▪, ▫, o
+          let handledList = false;
+          if (isListsEnabled) {
+            const leadingSpaces = rawLine.match(/^\s*/)[0].length;
+            const indentLevel = Math.floor(leadingSpaces / 2);
+            const indentPrefix = "  ".repeat(indentLevel);
+
+            const bulletMatch = trimmed.match(/^([•\*\+\-–—▪▫]|o)\s+(.+)$/);
+            if (bulletMatch) {
+              resultLines.push(`${indentPrefix}- ${bulletMatch[2]}`);
+              handledList = true;
+            }
+
+            // 5. Nhận diện danh sách số thứ tự: 1. hoặc 1) hoặc (1) hoặc a)
+            if (!handledList) {
+              const orderedMatch = trimmed.match(/^(\d+)[\.\)]\s+(.+)$/);
+              if (orderedMatch) {
+                resultLines.push(`${indentPrefix}${orderedMatch[1]}. ${orderedMatch[2]}`);
+                handledList = true;
+              } else {
+                const parenMatch = trimmed.match(/^\((\d+)\)\s+(.+)$/);
+                if (parenMatch) {
+                  resultLines.push(`${indentPrefix}${parenMatch[1]}. ${parenMatch[2]}`);
+                  handledList = true;
+                } else {
+                  const alphaMatch = trimmed.match(/^([a-z])[\.\)]\s+(.+)$/i);
+                  if (alphaMatch && alphaMatch[2].length < 150) {
+                    resultLines.push(`${indentPrefix}- **${alphaMatch[1]})** ${alphaMatch[2]}`);
+                    handledList = true;
+                  }
+                }
+              }
+            }
+          }
+
+          if (handledList) continue;
+
+          // 6. Nhận diện Ghi chú / Lưu ý / Trích dẫn (Blockquotes)
+          if (isQuotesEnabled) {
+            const noteMatch = trimmed.match(/^(Lưu ý|Ghi chú|Chú ý|Note|Quan trọng|Trích dẫn)[\s:.-]+(.*)$/i);
+            if (noteMatch) {
+              const noteContent = noteMatch[2] ? ` ${noteMatch[2].trim()}` : "";
+              resultLines.push(`> **${noteMatch[1]}:**${noteContent}`);
+              continue;
+            }
+          }
+
+          // 7. Nhận diện cặp Khóa: Giá trị (Key-Value)
+          if (isKeyValueEnabled) {
+            const kvMatch = trimmed.match(/^([A-ZÀ-Ỹa-zà-ỹ0-9\s]{2,28}):\s+(.+)$/);
+            if (kvMatch && !kvMatch[1].includes("http") && !kvMatch[1].includes("/")) {
+              resultLines.push(`**${kvMatch[1].trim()}:** ${kvMatch[2].trim()}`);
+              continue;
+            }
+          }
+
+          // Dòng văn bản bình thường (bảo tồn nguyên vẹn dấu tiếng Việt)
+          resultLines.push(trimmed);
+        }
+
+        const finalMarkdown = resultLines.join("\n");
+        markdownOutput.value = finalMarkdown;
+        updateMarkdownPreview(finalMarkdown);
+        updateStats();
+      }
+
+      // Trình dựng xem trước Markdown
+      function updateMarkdownPreview(md) {
+        if (!md.trim()) {
+          markdownPreview.innerHTML = `<p style="color: var(--slate-600); font-style: italic;">Chưa có nội dung để hiển thị xem trước.</p>`;
+          return;
+        }
+
+        let html = md
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+        html = html.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+        html = html.replace(/^######\s+(.*)$/gm, "<h6>$1</h6>");
+        html = html.replace(/^#####\s+(.*)$/gm, "<h5>$1</h5>");
+        html = html.replace(/^####\s+(.*)$/gm, "<h4>$1</h4>");
+        html = html.replace(/^###\s+(.*)$/gm, "<h3>$1</h3>");
+        html = html.replace(/^##\s+(.*)$/gm, "<h2>$1</h2>");
+        html = html.replace(/^#\s+(.*)$/gm, "<h1>$1</h1>");
+        html = html.replace(/^---$/gm, "<hr />");
+        html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/__(.*?)__/g, "<strong>$1</strong>");
+        html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        html = html.replace(/_(.*?)_/g, "<em>$1</em>");
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+        html = html.replace(/^\s*-\s+(.*)$/gm, "<li>$1</li>");
+        html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+
+        const paragraphs = html.split(/\n\n+/);
+        const wrapped = paragraphs
+          .map((p) => {
+            p = p.trim();
+            if (
+              p.startsWith("<h") ||
+              p.startsWith("<ul") ||
+              p.startsWith("<blockquote") ||
+              p.startsWith("<pre") ||
+              p.startsWith("<hr")
+            ) {
+              return p;
+            }
+            return `<p>${p.replace(/\n/g, "<br />")}</p>`;
+          })
+          .join("\n");
+
+        markdownPreview.innerHTML = wrapped;
+      }
+
+      // Sự kiện nút "Chuyển sang Markdown"
+      btnConvert.addEventListener("click", () => {
+        convertTxtToMarkdown();
+        showToast("Đã chuyển đổi sang Markdown thành công!", "success");
+      });
+
+      // Tự động chuyển đổi khi gõ hoặc dán văn bản
+      rawTextInput.addEventListener("input", () => {
+        convertTxtToMarkdown();
+      });
+
+      // Chuyển đổi lại khi người dùng đổi checkbox tùy chọn
+      [optHeadings, optLists, optQuotes, optKeyValue, optPreserveEmpty].forEach((chk) => {
+        chk.addEventListener("change", () => {
+          convertTxtToMarkdown();
+          showToast("Đã cập nhật theo tùy chọn mới!", "info");
+        });
+      });
+
+      // Cập nhật xem trước khi chỉnh sửa ô Markdown bên phải
+      markdownOutput.addEventListener("input", () => {
+        updateMarkdownPreview(markdownOutput.value);
+        updateStats();
+      });
+
+      // Nút "Sao chép Markdown"
+      btnCopy.addEventListener("click", async () => {
+        const textToCopy = markdownOutput.value;
+        if (!textToCopy.trim()) {
+          showToast("Chưa có nội dung Markdown để sao chép!", "error");
+          return;
+        }
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(textToCopy);
+          } else {
+            markdownOutput.select();
+            document.execCommand("copy");
+          }
+          showToast("Đã sao chép nội dung Markdown vào bộ nhớ tạm!", "success");
+        } catch (err) {
+          showToast("Lỗi khi sao chép, vui lòng thử lại!", "error");
+        }
+      });
+
+      // Nút "Tải file .md" (Màu cam)
+      btnDownload.addEventListener("click", () => {
+        const content = markdownOutput.value;
+        if (!content.trim()) {
+          showToast("Chưa có nội dung Markdown để tải xuống!", "error");
+          return;
+        }
+
+        let downloadName = currentFileName.replace(/\.[^/.]+$/, "") + ".md";
+        if (!downloadName.endsWith(".md")) {
+          downloadName += ".md";
+        }
+
+        // Tạo Blob UTF-8 để giữ nguyên toàn bộ dấu tiếng Việt
+        const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(`Đã tải xuống file "${downloadName}"!`, "orange");
+      });
+
+      // Nút "Xóa nội dung" (Màu đỏ)
+      btnClear.addEventListener("click", () => {
+        if (!rawTextInput.value.trim() && !markdownOutput.value.trim()) {
+          showToast("Nội dung hiện tại đã trống!", "info");
+          return;
+        }
+
+        rawTextInput.value = "";
+        markdownOutput.value = "";
+        updateMarkdownPreview("");
+        fileInput.value = "";
+        fileInfoBadge.style.display = "none";
+        currentFileName = "van-ban.txt";
+        updateStats();
+        showToast("Đã xóa toàn bộ nội dung!", "info");
+      });
+
+      // Chuyển đổi tab Mã nguồn Markdown và Xem trước trực quan
+      tabCode.addEventListener("click", () => {
+        tabCode.classList.add("active");
+        tabPreview.classList.remove("active");
+        markdownOutput.style.display = "block";
+        markdownPreview.classList.remove("active");
+      });
+
+      tabPreview.addEventListener("click", () => {
+        tabPreview.classList.add("active");
+        tabCode.classList.remove("active");
+        markdownOutput.style.display = "none";
+        markdownPreview.classList.add("active");
+      });
+
+      // Khởi tạo ban đầu
+      updateStats();
+    })();
+  </script>
+</body>
+</html>
